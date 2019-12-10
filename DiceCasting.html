@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>İki zar atın!</title>
+    <style>
+        #myCanvas {
+            background-color: darkslategray;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="600" height="480" onmousedown="cast();"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas")
+        var ctx = canvas.getContext("2d")
+
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * Math.floor(max));
+        }
+
+        var Dice = function () {
+            this.num = getRandomInt(6) + 1;
+            this.x = getRandomInt(canvas.width / 2) + canvas.width / 4
+            this.y = getRandomInt(canvas.height / 2) + canvas.height / 4
+            this.deg = 0;
+            this.size = 50;
+        }
+        Dice.prototype.castup = function () {
+            this.deg += 4 + getRandomInt(2);
+            this.num = getRandomInt(6) + 1;
+            this.size += 0.8;
+        }
+        Dice.prototype.castdown = function () {
+            this.deg += 4 + getRandomInt(2);
+            this.num = getRandomInt(6) + 1;
+            this.size -= 0.8;
+        }
+        Dice.prototype.draw = function () {
+            ctx.save();
+            ctx.beginPath();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.deg);
+            ctx.translate(-this.size / 2, -this.size / 2);
+            ctx.rect(0, 0, this.size, this.size)
+            ctx.fillStyle = "white";
+            ctx.fill();
+            ctx.closePath();
+            if (this.num % 2 == 1) {
+                ctx.beginPath();
+                ctx.arc(this.size / 2, this.size / 2, this.size / 10, 0, 6.28, false);
+                ctx.fillStyle = "black";
+                ctx.fill();
+                ctx.closePath();
+                if (this.num == 3 || this.num == 5) {
+                    ctx.beginPath();
+                    ctx.arc(this.size / 6, this.size / 6, this.size / 10, 0, 6.28, false);
+                    ctx.arc(this.size * 5 / 6, this.size * 5 / 6, this.size / 10, 0, 6.28, false);
+                    ctx.fillStyle = "black";
+                    ctx.fill();
+                    ctx.closePath();
+                    if (this.num == 5) {
+                        ctx.beginPath();
+                        ctx.arc(this.size / 6, this.size / 6, this.size / 10, 0, 6.28, false);
+                        ctx.arc(this.size * 5 / 6, this.size * 5 / 6, this.size / 10, 0, 6.28, false);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+                ctx.fillStyle = "black";
+                ctx.fill();
+                ctx.closePath();
+            }
+            else {
+                ctx.beginPath();
+                ctx.arc(this.size / 6, this.size / 6, this.size / 10, 0, 6.28, false);
+                ctx.arc(this.size * 5 / 6, this.size * 5 / 6, this.size / 10, 0, 6.28, false);
+                ctx.fillStyle = "black";
+                ctx.fill();
+                ctx.closePath();
+                if (this.num == 4 || this.num == 6) {
+                    ctx.beginPath();
+                    ctx.arc(this.size / 6, this.size * 5 / 6, this.size / 10, 0, 6.28, false);
+                    ctx.arc(this.size * 5 / 6, this.size / 6, this.size / 10, 0, 6.28, false);
+                    ctx.fillStyle = "black";
+                    ctx.fill();
+                    ctx.closePath();
+                    if (this.num == 6) {
+                        ctx.beginPath();
+                        ctx.arc(this.size * 5 / 6, this.size / 2, this.size / 10, 0, 6.28, false);
+                        ctx.arc(this.size / 6, this.size / 2, this.size / 10, 0, 6.28, false);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+                ctx.fillStyle = "black";
+                ctx.fill();
+                ctx.closePath();
+            }
+            ctx.restore();
+        }
+        var Statistics = {
+            throw: 0,
+            num: ["offset", 0, 0, 0, 0, 0, 0],
+            double: ["offset", 0, 0, 0, 0, 0, 0]
+        }
+        Statistics.calculate = function (dicearr) {
+            this.throw += 1;
+
+            //checks double only if there is only 2 dice
+            var flag = 0
+            for (var i = 0; i < dicearr.length; i++) {
+                this.num[dicearr[i].num] += 1;
+                if (flag == 0) flag = dicearr[i].num;
+                else {
+                    if (dicearr[i].num == flag)
+                        this.double[dicearr[i].num] += 1;
+                }
+            }
+        }
+        Statistics.print = function () {
+            alert(this);
+        }
+
+        var throw_period = 0;
+        const THROW_PERIOD_SET = 60
+        function cast() {
+            if (throw_period <= 0)
+                throw_period = THROW_PERIOD_SET;
+        }
+
+        DiceArray = [new Dice(), new Dice()];
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < DiceArray.length; i++) {
+                DiceArray[i].draw();
+            }
+
+            if (throw_period > 0) {
+                throw_period -= 1;
+                for (var i = 0; i < DiceArray.length; i++) {
+                    if (throw_period > THROW_PERIOD_SET / 2) DiceArray[i].castup();
+                    else DiceArray[i].castdown();
+                }
+                if (throw_period == 0) {
+                    for (var i = 0; i < DiceArray.length; i++) {
+                        DiceArray[i].size += 1.6;
+                    }
+                    Statistics.calculate(DiceArray)
+                };
+            }
+        }
+
+        setInterval(draw, 25);
+    </script>
+</body>
+</html>
